@@ -40,7 +40,7 @@ defmodule Roman do
     end)
   end
 
-  defp multiply_by_tenth_power(int_list) do
+  def multiply_by_tenth_power(int_list) do
     int_list
     |> Enum.with_index(1)
     |> Enum.map(fn {int, index} ->
@@ -50,7 +50,7 @@ defmodule Roman do
     end)
   end
 
-  defp get_combined_numbers(int, acc \\ {[], 0}) do
+  def get_combined_numbers(int, acc \\ {[], 0}) do
     is_negative? = int < 0
     abs_int = :erlang.abs(int)
     number_pool = Map.keys(@roman_numeral_map)
@@ -73,7 +73,7 @@ defmodule Roman do
       end
   end
 
-  defp get_difference_and_closest_int(abs_int, number_pool) do
+  def get_difference_and_closest_int(abs_int, number_pool) do
     number_pool_with_differences =
       number_pool
       |> Enum.map(fn int_to_compare ->
