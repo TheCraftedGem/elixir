@@ -1,8 +1,5 @@
 defmodule BeerSong do
-  @doc """
-  Get a single verse of the beer song
-  """
-  @spec verse(integer) :: String.t()
+
   def verse(0) do
     """
     No more bottles of beer on the wall, no more bottles of beer.
@@ -25,16 +22,14 @@ defmodule BeerSong do
   end
 
   def verse(number) do
-    number
     """
     #{number} bottles of beer on the wall, #{number} bottles of beer.
     Take one down and pass it around, #{number - 1} bottles of beer on the wall.
     """
   end
 
-  @spec lyrics(Range.t()) :: String.t()
   def lyrics(range \\ 99..0) do
-    Enum.map(range, fn r -> verse(r) <> "\n" end)
+    Enum.map(range, fn num -> verse(num) <> "\n" end)
       |> to_string
       |> String.slice(0..-2)
   end
