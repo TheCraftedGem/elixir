@@ -29,8 +29,6 @@ defmodule BeerSong do
   end
 
   def lyrics(range \\ 99..0) do
-    Enum.map(range, fn num -> verse(num) <> "\n" end)
-      |> to_string
-      |> String.slice(0..-2)
+    Enum.map_join(range, "\n", &verse/1)
   end
 end
