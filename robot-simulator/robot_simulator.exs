@@ -1,35 +1,74 @@
 defmodule RobotSimulator do
-  @doc """
-  Create a Robot Simulator given an initial direction and position.
 
-  Valid directions are: `:north`, `:east`, `:south`, `:west`
-  """
-  @spec create(direction :: atom, position :: {integer, integer}) :: any
-  def create(direction \\ nil, position \\ nil) do
+  def create() do
+
   end
 
-  @doc """
-  Simulate the robot's movement given a string of instructions.
+  def create(direction \\ nil, position \\ nil)  do
 
-  Valid instructions are: "R" (turn right), "L", (turn left), and "A" (advance)
-  """
-  @spec simulate(robot :: any, instructions :: String.t()) :: any
+    validated_directions = Enum.any?(valid_directions, fn x -> direction == x end)
+
+    if is_tuple(position) && Enum.all?(Tuple.to_list(position), fn x -> is_integer(x) end) && Enum.count(Tuple.to_list(position)) == 2 && Enum.any?(Tuple.to_list(position), fn x -> is_integer(x) end) do
+      if validated_directions  do
+        %{direction: direction, position: position}
+      else
+        {:error, "invalid direction"}
+      end
+    else
+      if  validated_directions  do
+        {:error, "invalid position"}
+      end
+    end
+  end
+
   def simulate(robot, instructions) do
+    current_direction = robot.direction
+    current_position = robot.position
+    coords = String.to_charlist(instructions)
+
+    if current_position == :north do
+      Enum.map(coords, fn x -> if x == "L" do: Map.put(robot, :direction, :west) end)
+      Enum.map(coords, fn x -> if x == "R" do: Map.put(robot, :direction, :east) end)
+    else
+      if current_position == :south do
+        Enum.map(coords, fn x -> if x == "L" do: Map.put(robot, :direction, :east) end)
+        Enum.map(coords, fn x -> if x == "R" do: Map.put(robot, :direction, :west) end)
+      end
+    else
+      if current_position == :east do
+        Enum.map(coords, fn x -> if x == "L" do: Map.put(robot, :direction, :north) end)
+        Enum.map(coords, fn x -> if x == "R" do: Map.put(robot, :direction, :south) end)
+      end
+    else
+      if current_position == :west do
+        Enum.map(coords, fn x -> if x == "L" do: Map.put(robot, :direction, :south) end)
+        Enum.map(coords, fn x -> if x == "R" do: Map.put(robot, :direction, :north) end)
+      end
+    end
   end
 
-  @doc """
-  Return the robot's direction.
 
-  Valid directions are: `:north`, `:east`, `:south`, `:west`
-  """
-  @spec direction(robot :: any) :: atom
+  def direction(nil) do
+    :north
+  end
+
   def direction(robot) do
+    robot.direction
   end
 
-  @doc """
-  Return the robot's position.
-  """
-  @spec position(robot :: any) :: {integer, integer}
+  def position(nil) do
+    {0, 0}
+  end
+
   def position(robot) do
+    robot.position
+  end
+
+  defp valid_directions do
+    [:north, :south, :east, :west]
+  end
+
+  defp valid_positions do
+    [0,1,2,3,4,5,6,7,8,9]
   end
 end
