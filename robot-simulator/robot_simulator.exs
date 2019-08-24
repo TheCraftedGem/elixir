@@ -1,93 +1,75 @@
-defmodule Robot do
-  defstruct direction: nil, position: nil
-end
-
 defmodule RobotSimulator do
-  import Robot
+  defguard is_direction(direction) when direction in [:north, :east, :south, :west]
+  defguard is_position(x, y) when is_integer(x) and is_integer(y)
 
-  def create() do
-    %{direction: :north, position: {0,0}}
+  @doc """
+  Create a Robot Simulator given an initial direction and position.
+  Valid directions are: `:north`, `:east`, `:south`, `:west`
+  """
+  @spec create(direction :: atom, position :: {integer, integer}) :: any
+  def create(direction \\ :north, position \\ {0, 0})
+  def create(direction, position = {x, y}) when is_direction(direction) and is_position(x, y) do
+    {direction, position}
   end
+  def create(direction, _position) when is_direction(direction), do: {:error, "invalid position"}
+  def create(_direction, _position = {x, y}) when is_position(x, y), do: {:error, "invalid direction"}
+  def create(_, _), do: {:error, "invalid position and direction"}
 
-  def create(:invalid, _position)  do
-    {:error, "invalid direction"}
-  end
-
-  def create(0, _position)  do
-    {:error, "invalid direction"}
-  end
-
-  def create(direction, _position) when is_binary(direction)  do
-    {:error, "invalid direction"}
-  end
-
-  def create(_direction , position) when is_tuple(position) == false do
-    {:error, "invalid position"}
-  end
-
-  def create(_direction , position) when tuple_size(position) != 2  do
-    {:error, "invalid position"}
-  end
-
-  def create(_direction , position) when elem(position, 0) |> is_integer() != true  do
-    {:error, "invalid position"}
-  end
-
-  def create(_direction , position) when elem(position, 1) |> is_integer() != true  do
-    {:error, "invalid position"}
-  end
-
-  def create(direction \\ nil, position \\ nil) when is_tuple(position) do
-    %{direction: direction, position: position}
-  end
-
-  def simulate(robot, []) do
-    robot
-  end
-
-  def simulate(robot, [head|tail]) when head == "A" do
-    case robot.direction do
-      :north -> simulate(Map.update!(robot, :position, fn {_a, b} -> {_a, b + 1} end), tail)
-      :west  -> simulate(Map.update!(robot, :position, fn {a, _b} -> {a - 1, _b} end), tail)
-      :east  -> simulate(Map.update!(robot, :position, fn {a, _b} -> {a + 1, _b} end), tail)
-      :south -> simulate(Map.update!(robot, :position, fn {_a, b} -> {_a, b - 1} end), tail)
+  @doc """
+  Simulate the robot's movement given a string of instructions.
+  Valid instructions are: "R" (turn right), "L", (turn left), and "A" (advance)
+  """
+  @spec simulate(robot :: any, instructions :: String.t()) :: any
+  def simulate(robot, instructions) do
+    case invalid_intructions?(instructions) do
+      true -> {:error, "invalid instruction"}
+      false -> String.graphemes(instructions)
+               |> Enum.reduce(robot, fn command, robot -> simulate_command(command, robot) end)
     end
   end
 
-  def simulate(robot, [head|tail]) when head == "L" do
-    case robot.direction do
-      :north ->  simulate(Map.put(robot, :direction, :west), tail)
-      :west  ->  simulate(Map.put(robot, :direction, :south), tail)
-      :south ->  simulate(Map.put(robot, :direction, :east), tail)
-      :east  ->  simulate(Map.put(robot, :direction, :north), tail)
+  defp invalid_intructions?(instructions) do
+    String.match?(instructions, ~r/[^ALR]/)
+  end
+
+  defp simulate_command(command, robot) do
+    case {direction(robot), command} do
+      {:north, "L"} -> create(:west, position(robot))
+      {:north, "R"} -> create(:east, position(robot))
+      {:north, "A"} ->
+        {x, y} = position(robot)
+        create(:north, {x, y + 1})
+
+      {:east, "L"} -> create(:north, position(robot))
+      {:east, "R"} -> create(:south, position(robot))
+      {:east, "A"} ->
+        {x, y} = position(robot)
+        create(:east, {x + 1, y})
+
+      {:south, "L"} -> create(:east, position(robot))
+      {:south, "R"} -> create(:west, position(robot))
+      {:south, "A"} ->
+        {x, y} = position(robot)
+        create(:south, {x, y - 1})
+
+      {:west, "L"} -> create(:south, position(robot))
+      {:west, "R"} -> create(:north, position(robot))
+      {:west, "A"} ->
+        {x, y} = position(robot)
+        create(:west, {x - 1, y})
     end
   end
 
-  def simulate(robot, [head|tail]) when head == "R" do
-    case robot.direction do
-      :north ->  simulate(Map.put(robot, :direction, :east), tail)
-      :west  ->  simulate(Map.put(robot, :direction, :north), tail)
-      :south ->  simulate(Map.put(robot, :direction, :west), tail)
-      :east  ->  simulate(Map.put(robot, :direction, :south), tail)
-    end
-  end
+  @doc """
+  Return the robot's direction.
+  Valid directions are: `:north`, `:east`, `:south`, `:west`
+  """
+  @spec direction(robot :: any) :: atom
+  def direction({direction, _position}), do: direction
 
-  def simulate(robot, [head|tail]) when head != "A" or "L" or "R" do
-    {:error, "invalid instruction"}
-  end
-
-  def simulate(robot, instructions) when is_binary(instructions) do
-    instructions = String.codepoints(instructions)
-    simulate(robot, instructions)
-  end
-
-  def direction(robot) do
-    robot.direction
-  end
-
-  def position(robot) do
-    robot.position
-  end
+  @doc """
+  Return the robot's position.
+  """
+  @spec position(robot :: any) :: {integer, integer}
+  def position({_direction, position}), do: position
 end
-
-
